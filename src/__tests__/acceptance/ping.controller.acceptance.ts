@@ -22,6 +22,8 @@ describe('PingController', () => {
 		const res = await client
 			.get('/ping?msg=world')
 			.expect(HTTP_STATUS_CODE_OK);
-		expect(res.body).to.containEql({ greeting: 'Hello from LoopBack' });
+		expect(res.body).to.containDeep({
+			result: { greeting: 'Hello from LoopBack' },
+		});
 	});
 });

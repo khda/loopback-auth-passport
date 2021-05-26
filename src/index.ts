@@ -1,13 +1,19 @@
+import * as dotenv from 'dotenv';
+
+import { LoopbackAuthPassportApplication } from './application';
 import {
-	ApplicationConfig,
-	LoopbackAuthPassportApplication,
-} from './application';
+	ERROR_SAFE_FIELDS,
+	GRACE_PERIOD_FOR_CLOSE,
+	HOST_DEFAULT,
+	PORT_DEFAULT,
+} from './constants';
+import { ILoopbackAuthPassportApplicationConfig } from './types';
 
 export * from './application';
 
-const PORT_DEFAULT = 3000;
-
-export async function main(options: ApplicationConfig = {}) {
+export async function main(
+	options: ILoopbackAuthPassportApplicationConfig = {},
+) {
 	const app = new LoopbackAuthPassportApplication(options);
 	await app.boot();
 	await app.start();
@@ -20,25 +26,25 @@ export async function main(options: ApplicationConfig = {}) {
 }
 
 if (require.main === module) {
-	// Run the application
-	const config = {
+	dotenv.config();
+
+	const config: ILoopbackAuthPassportApplicationConfig = {
+		application: { projectName: process.env.PROJECT_NAME },
 		rest: {
-			port: Number(process.env.PORT ?? PORT_DEFAULT),
-			host: process.env.HOST,
-			// The `gracePeriodForClose` provides a graceful close for http/https
-			// servers with keep-alive clients. The default value is `Infinity`
-			// (don't force-close). If you want to immediately destroy all sockets
-			// upon stop, set its value to `0`.
-			// See https://www.npmjs.com/package/stoppable
-			gracePeriodForClose: 5000,
-			openApiSpec: {
-				// useful when used with OpenAPI-to-GraphQL to locate your application
-				setServersFromRequest: true,
+			host: process.env.REST_HOST ?? HOST_DEFAULT,
+			port: Number(process.env.REST_PORT ?? PORT_DEFAULT),
+			gracePeriodForClose: GRACE_PERIOD_FOR_CLOSE,
+			openApiSpec: { setServersFromRequest: true },
+			basePath: process.env.REST_BASE_PATH,
+			errorWriterOptions: {
+				debug: process.env.REST_DEBUG === 'true',
+				safeFields: ERROR_SAFE_FIELDS,
 			},
 		},
 	};
-	main(config).catch((err) => {
-		console.error('Cannot start the application.', err);
+
+	main(config).catch((error) => {
+		console.error('Cannot start the application.', error);
 		process.exit(1);
 	});
 }

@@ -54,13 +54,17 @@
 		"@loopback/rest": "^9.2.1",
 		"@loopback/rest-explorer": "^3.2.1",
 		"@loopback/service-proxy": "^3.1.1",
-		"tslib": "^2.0.0"
+		"dotenv": "^10.0.0",
+		"tslib": "^2.0.0",
+		"uuid": "^8.3.2"
 	},
 	"devDependencies": {
 		"@loopback/build": "^6.3.1",
 		"@loopback/eslint-config": "^10.1.1",
 		"@loopback/testlab": "^3.3.1",
+		"@types/dotenv": "^8.2.0",
 		"@types/node": "^10.17.56",
+		"@types/uuid": "^8.3.0",
 		"eslint": "^7.23.0",
 		"eslint-plugin-import": "^2.23.3",
 		"source-map-support": "^0.5.19",
