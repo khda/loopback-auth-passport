@@ -3,7 +3,7 @@ import path from 'path';
 import { BootMixin } from '@loopback/boot';
 import { ApplicationConfig } from '@loopback/core';
 import { RepositoryMixin } from '@loopback/repository';
-import { RestApplication } from '@loopback/rest';
+import { RestApplication, RestBindings } from '@loopback/rest';
 import {
 	RestExplorerBindings,
 	RestExplorerComponent,
@@ -60,6 +60,9 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 
 		this.bind(ApplicationBindings.PROJECT_NAME).to(
 			options.application?.projectName ?? PROJECT_NAME_DEFAULT,
+		);
+		this.bind(RestBindings.ERROR_WRITER_OPTIONS).to(
+			options.rest?.errorWriterOptions ?? {},
 		);
 	}
 }

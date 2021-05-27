@@ -161,7 +161,7 @@
 		"@typescript-eslint/array-type": "warn",
 		"@typescript-eslint/ban-tslint-comment": "warn",
 		"brace-style": "off",
-		"@typescript-eslint/brace-style": "warn",
+		"@typescript-eslint/brace-style": "off",
 		"@typescript-eslint/class-literal-property-style": "warn",
 		"comma-dangle": "off",
 		"@typescript-eslint/comma-dangle": [
