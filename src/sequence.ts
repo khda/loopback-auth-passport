@@ -1,3 +1,9 @@
+import {
+	AUTHENTICATION_STRATEGY_NOT_FOUND,
+	AuthenticateFn,
+	AuthenticationBindings,
+	USER_PROFILE_NOT_FOUND,
+} from '@loopback/authentication';
 import { inject } from '@loopback/core';
 import {
 	FindRoute,
@@ -24,6 +30,8 @@ export class MySequence implements SequenceHandler {
 		private readonly send: Send,
 		@inject(RestBindings.SequenceActions.REJECT)
 		private readonly reject: Reject,
+		@inject(AuthenticationBindings.AUTH_ACTION)
+		private readonly authenticateRequest: AuthenticateFn,
 		/**
 		 * Optional invoker for registered middleware in a chain.
 		 * To be injected via SequenceActions.INVOKE_MIDDLEWARE.
@@ -50,6 +58,8 @@ export class MySequence implements SequenceHandler {
 			const route = this.findRoute(request);
 			const args = await this.parseParams(request, route);
 
+			await this.authenticateRequest(request);
+
 			const result = await this.invoke(route, args);
 			const endTimestamp = Date.now();
 			const meta = {
@@ -61,6 +71,13 @@ export class MySequence implements SequenceHandler {
 
 			this.send(response, isExplorer ? result : { meta, result });
 		} catch (error) {
+			if (
+				error.code === AUTHENTICATION_STRATEGY_NOT_FOUND ||
+				error.code === USER_PROFILE_NOT_FOUND
+			) {
+				error.statusCode = 401;
+			}
+
 			const endTimestamp = Date.now();
 
 			error.meta = {

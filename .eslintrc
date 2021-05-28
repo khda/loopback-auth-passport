@@ -828,7 +828,7 @@
 		"import/unambiguous": "warn",
 		"import/no-unassigned-import": "warn",
 		"import/no-useless-path-segments": "warn",
-		"import/dynamic-import-chunkname": "warn",
+		"import/dynamic-import-chunkname": "off",
 		"import/exports-last": "off",
 		"import/no-deprecated": "warn",
 		"import/imports-first": "warn"

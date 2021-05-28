@@ -1,18 +1,26 @@
+import { AuthenticationBindings, authenticate } from '@loopback/authentication';
+import { inject, intercept } from '@loopback/core';
 import { repository } from '@loopback/repository';
 import {
 	HttpErrors,
+	Response,
+	RestBindings,
 	api,
+	get,
 	getModelSchemaRef,
 	post,
 	requestBody,
 } from '@loopback/rest';
+import { SecurityBindings, UserProfile } from '@loopback/security';
 
+import { PassportBindings } from '../keys';
 import { LoginRequest, User } from '../models';
 import {
 	UserCredentialsRepository,
 	UserIdentityRepository,
 	UserRepository,
 } from '../repositories';
+import { GOOGLE_AUTHENTICATION_STRATEGY_NAME } from '../services';
 
 @api({ basePath: '/auth' })
 export class AuthController {
@@ -110,5 +118,40 @@ export class AuthController {
 		return this.userRepository.findById(userCredentials.userId, {
 			include: ['identities', 'credentials'],
 		});
+	}
+
+	@authenticate(GOOGLE_AUTHENTICATION_STRATEGY_NAME)
+	@get('/google', {
+		responses: {
+			200: {
+				description: 'A successful response.',
+				content: { 'application/json': { schema: { type: 'string' } } },
+			},
+		},
+	})
+	loginViaGoogle(
+		@inject(AuthenticationBindings.AUTHENTICATION_REDIRECT_URL)
+		redirectUrl: string,
+		// 303 (need 302 by default)
+		@inject(AuthenticationBindings.AUTHENTICATION_REDIRECT_STATUS)
+		status: number,
+		@inject(RestBindings.Http.RESPONSE)
+		response: Response,
+	) {
+		// response.statusCode = status || 302;
+		// response.setHeader('Location', redirectUrl);
+		// response.end();
+
+		// return response;
+
+		return redirectUrl;
+	}
+
+	@intercept(PassportBindings.GOOGLE_CALLBACK_INTERCEPTOR)
+	@get('/google/callback')
+	googleCallback(@inject(SecurityBindings.USER) user: UserProfile) {
+		console.log('user', user);
+
+		return user;
 	}
 }
