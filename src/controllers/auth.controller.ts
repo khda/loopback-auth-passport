@@ -20,7 +20,10 @@ import {
 	UserIdentityRepository,
 	UserRepository,
 } from '../repositories';
-import { GOOGLE_AUTHENTICATION_STRATEGY_NAME } from '../services';
+import {
+	FACEBOOK_AUTHENTICATION_STRATEGY_NAME,
+	GOOGLE_AUTHENTICATION_STRATEGY_NAME,
+} from '../services';
 
 @api({ basePath: '/auth' })
 export class AuthController {
@@ -150,6 +153,41 @@ export class AuthController {
 	@intercept(PassportBindings.GOOGLE_CALLBACK_INTERCEPTOR)
 	@get('/google/callback')
 	googleCallback(@inject(SecurityBindings.USER) user: UserProfile) {
+		console.log('user', user);
+
+		return user;
+	}
+
+	@authenticate(FACEBOOK_AUTHENTICATION_STRATEGY_NAME)
+	@get('/facebook', {
+		responses: {
+			200: {
+				description: 'A successful response.',
+				content: { 'application/json': { schema: { type: 'string' } } },
+			},
+		},
+	})
+	loginViaFacebook(
+		@inject(AuthenticationBindings.AUTHENTICATION_REDIRECT_URL)
+		redirectUrl: string,
+		// 303 (need 302 by default)
+		@inject(AuthenticationBindings.AUTHENTICATION_REDIRECT_STATUS)
+		status: number,
+		@inject(RestBindings.Http.RESPONSE)
+		response: Response,
+	) {
+		// response.statusCode = status || 302;
+		// response.setHeader('Location', redirectUrl);
+		// response.end();
+
+		// return response;
+
+		return redirectUrl;
+	}
+
+	@intercept(PassportBindings.FACEBOOK_CALLBACK_INTERCEPTOR)
+	@get('/facebook/callback')
+	facebookCallback(@inject(SecurityBindings.USER) user: UserProfile) {
 		console.log('user', user);
 
 		return user;

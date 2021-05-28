@@ -46,7 +46,14 @@ if (require.main === module) {
 				clientID: process.env.GOOGLE_CLIENT_ID as string,
 				clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
 				callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
-				scope: JSON.parse(process.env.GOOGLE_SCOPE ?? '[]'),
+				scope: ['email', 'profile'],
+			},
+			facebook: {
+				clientID: process.env.FACEBOOK_CLIENT_ID as string,
+				clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
+				callbackURL: process.env.FACEBOOK_CALLBACK_URL as string,
+				scope: ['email'],
+				profileFields: ['name', 'email', 'displayName', 'id'],
 			},
 		},
 	};

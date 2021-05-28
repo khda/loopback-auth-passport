@@ -6,18 +6,18 @@ import {
 	service,
 } from '@loopback/core';
 import { Profile as PassportProfile } from 'passport';
-import { Strategy, StrategyOptions } from 'passport-google-oauth2';
+import { Strategy, StrategyOption as StrategyOptions } from 'passport-facebook';
 
 import { PassportBindings } from '../keys';
 import { UserIdentityService } from '../services';
 import { TDone } from '../types';
 
 @injectable.provider({ scope: BindingScope.SINGLETON })
-export class GoogleStrategyProvider implements Provider<Strategy> {
+export class FacebookStrategyProvider implements Provider<Strategy> {
 	strategy: Strategy;
 
 	constructor(
-		@inject(PassportBindings.GOOGLE_STRATEGY_OPTIONS)
+		@inject(PassportBindings.FACEBOOK_STRATEGY_OPTIONS)
 		private readonly strategyOptions: StrategyOptions,
 		@service(UserIdentityService)
 		private readonly userIdentityService: UserIdentityService,

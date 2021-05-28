@@ -1,15 +1,15 @@
 import { Interceptor, Provider, inject } from '@loopback/core';
 import { toInterceptor } from '@loopback/rest';
 import passport from 'passport';
-import { Strategy } from 'passport-google-oauth2';
+import { Strategy } from 'passport-facebook';
 
 import { PassportBindings } from '../keys';
 
-export class GoogleInterceptor implements Provider<Interceptor> {
+export class FacebookInterceptor implements Provider<Interceptor> {
 	private readonly interceptor: Interceptor;
 
 	constructor(
-		@inject(PassportBindings.GOOGLE_STRATEGY)
+		@inject(PassportBindings.FACEBOOK_STRATEGY)
 		private readonly strategy: Strategy,
 	) {
 		this.interceptor = toInterceptor(

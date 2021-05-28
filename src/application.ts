@@ -14,17 +14,20 @@ import {
 } from '@loopback/rest-explorer';
 import { ServiceMixin } from '@loopback/service-proxy';
 import passport from 'passport';
+import { StrategyOption as FacebookStrategyOptions } from 'passport-facebook';
 import { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth2';
 
 import { PROJECT_NAME_DEFAULT } from './constants';
 import { ApplicationBindings, PassportBindings } from './keys';
 import {
+	FacebookInterceptor,
+	FacebookStrategyProvider,
 	GoogleInterceptor,
 	GoogleStrategyProvider,
 	UserInterceptor,
 } from './providers';
 import { MySequence } from './sequence';
-import { GoogleAuthentication } from './services';
+import { FacebookAuthentication, GoogleAuthentication } from './services';
 import { ILoopbackAuthPassportApplicationConfig } from './types';
 
 export { ApplicationConfig };
@@ -50,6 +53,7 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 		// Authentication
 		this.component(AuthenticationComponent);
 		registerAuthenticationStrategy(this, GoogleAuthentication);
+		registerAuthenticationStrategy(this, FacebookAuthentication);
 
 		this.projectRoot = __dirname;
 		this.bootOptions = {
@@ -83,26 +87,46 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 		passport.serializeUser((user: unknown, done) => done(null, user));
 		passport.deserializeUser((user: never, done) => done(null, user));
 
+		this.bind(PassportBindings.PASSPORT_INIT_INTERCEPTOR).to(
+			toInterceptor(passport.initialize()),
+		);
+		this.bind(PassportBindings.USER_INTERCEPTOR).toProvider(
+			UserInterceptor,
+		);
+
+		// Google
 		this.bind(PassportBindings.GOOGLE_STRATEGY_OPTIONS).to(
 			options.oauth2Providers?.google ?? ({} as GoogleStrategyOptions),
 		);
 		this.bind(PassportBindings.GOOGLE_STRATEGY).toProvider(
 			GoogleStrategyProvider,
 		);
-		this.bind(PassportBindings.PASSPORT_INIT_INTERCEPTOR).to(
-			toInterceptor(passport.initialize()),
-		);
-
 		this.bind(PassportBindings.GOOGLE_INTERCEPTOR).toProvider(
 			GoogleInterceptor,
-		);
-		this.bind(PassportBindings.USER_INTERCEPTOR).toProvider(
-			UserInterceptor,
 		);
 		this.bind(PassportBindings.GOOGLE_CALLBACK_INTERCEPTOR).to(
 			composeInterceptors(
 				PassportBindings.PASSPORT_INIT_INTERCEPTOR,
 				PassportBindings.GOOGLE_INTERCEPTOR,
+				PassportBindings.USER_INTERCEPTOR,
+			),
+		);
+
+		// Facebook
+		this.bind(PassportBindings.FACEBOOK_STRATEGY_OPTIONS).to(
+			options.oauth2Providers?.facebook ??
+				({} as FacebookStrategyOptions),
+		);
+		this.bind(PassportBindings.FACEBOOK_STRATEGY).toProvider(
+			FacebookStrategyProvider,
+		);
+		this.bind(PassportBindings.FACEBOOK_INTERCEPTOR).toProvider(
+			FacebookInterceptor,
+		);
+		this.bind(PassportBindings.FACEBOOK_CALLBACK_INTERCEPTOR).to(
+			composeInterceptors(
+				PassportBindings.PASSPORT_INIT_INTERCEPTOR,
+				PassportBindings.FACEBOOK_INTERCEPTOR,
 				PassportBindings.USER_INTERCEPTOR,
 			),
 		);
