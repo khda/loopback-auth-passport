@@ -1,6 +1,5 @@
 import { AuthenticationBindings, authenticate } from '@loopback/authentication';
-import { inject, intercept } from '@loopback/core';
-import { repository } from '@loopback/repository';
+import { inject, intercept, service } from '@loopback/core';
 import {
 	HttpErrors,
 	Response,
@@ -16,24 +15,19 @@ import { SecurityBindings, UserProfile } from '@loopback/security';
 import { PassportBindings } from '../keys';
 import { LoginRequest, User } from '../models';
 import {
-	UserCredentialsRepository,
-	UserIdentityRepository,
-	UserRepository,
-} from '../repositories';
-import {
 	FACEBOOK_AUTHENTICATION_STRATEGY_NAME,
 	GOOGLE_AUTHENTICATION_STRATEGY_NAME,
+	UserCredentialsService,
+	UserService,
 } from '../services';
 
 @api({ basePath: '/auth' })
 export class AuthController {
 	constructor(
-		@repository(UserRepository)
-		private readonly userRepository: UserRepository,
-		@repository(UserCredentialsRepository)
-		private readonly userCredentialsRepository: UserCredentialsRepository,
-		@repository(UserIdentityRepository)
-		private readonly userIdentityRepository: UserIdentityRepository,
+		@service(UserService)
+		private readonly userService: UserService,
+		@service(UserCredentialsService)
+		private readonly userCredentialsService: UserCredentialsService,
 	) {}
 
 	/**
@@ -57,29 +51,28 @@ export class AuthController {
 		signupRequest: LoginRequest,
 	): Promise<User> {
 		const existingUserCredentials =
-			await this.userCredentialsRepository.findOne({
+			await this.userCredentialsService.findOne({
 				where: { username: signupRequest.username },
 			});
 
 		if (existingUserCredentials) {
-			return this.userRepository.findById(
-				existingUserCredentials.userId,
-				{ include: ['identities', 'credentials'] },
-			);
+			return this.userService.findById(existingUserCredentials.userId, {
+				include: ['identities', 'credentials'],
+			});
 		}
 
-		const user = await this.userRepository.create({
+		const user = await this.userService.createOne({
 			name: signupRequest.username,
 			email: signupRequest.username,
 		});
 
-		const userCredentials = await this.userCredentialsRepository.create({
+		const userCredentials = await this.userCredentialsService.createOne({
 			userId: user.id,
 			username: signupRequest.username,
 			password: signupRequest.password,
 		});
 
-		return this.userRepository.findById(user.id, {
+		return this.userService.findById(user.id, {
 			include: ['identities', 'credentials'],
 		});
 	}
@@ -91,9 +84,7 @@ export class AuthController {
 		responses: {
 			'200': {
 				content: {
-					'application/json': {
-						schema: getModelSchemaRef(LoginRequest),
-					},
+					'application/json': { schema: getModelSchemaRef(User) },
 				},
 			},
 		},
@@ -108,7 +99,7 @@ export class AuthController {
 	): Promise<User> {
 		const { username, password } = loginRequest;
 
-		const userCredentials = await this.userCredentialsRepository.findOne({
+		const userCredentials = await this.userCredentialsService.findOne({
 			where: { username },
 		});
 
@@ -118,7 +109,7 @@ export class AuthController {
 			throw new HttpErrors.Unauthorized('Invalid Credentials!');
 		}
 
-		return this.userRepository.findById(userCredentials.userId, {
+		return this.userService.findById(userCredentials.userId, {
 			include: ['identities', 'credentials'],
 		});
 	}

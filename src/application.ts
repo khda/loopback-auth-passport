@@ -1,6 +1,7 @@
 import path from 'path';
 
 import {
+	AuthenticationBindings,
 	AuthenticationComponent,
 	registerAuthenticationStrategy,
 } from '@loopback/authentication';
@@ -27,7 +28,11 @@ import {
 	UserInterceptor,
 } from './providers';
 import { MySequence } from './sequence';
-import { FacebookAuthentication, GoogleAuthentication } from './services';
+import {
+	FacebookAuthentication,
+	GoogleAuthentication,
+	formUserProfile,
+} from './services';
 import { ILoopbackAuthPassportApplicationConfig } from './types';
 
 export { ApplicationConfig };
@@ -49,11 +54,6 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 			path: '/explorer',
 		});
 		this.component(RestExplorerComponent);
-
-		// Authentication
-		this.component(AuthenticationComponent);
-		registerAuthenticationStrategy(this, GoogleAuthentication);
-		registerAuthenticationStrategy(this, FacebookAuthentication);
 
 		this.projectRoot = __dirname;
 		this.bootOptions = {
@@ -81,6 +81,12 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 		);
 		this.bind(RestBindings.ERROR_WRITER_OPTIONS).to(
 			options.rest?.errorWriterOptions ?? {},
+		);
+
+		// Authentication
+		this.component(AuthenticationComponent);
+		this.bind(AuthenticationBindings.USER_PROFILE_FACTORY).to(
+			formUserProfile,
 		);
 
 		// Passport
@@ -130,5 +136,8 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 				PassportBindings.USER_INTERCEPTOR,
 			),
 		);
+
+		registerAuthenticationStrategy(this, GoogleAuthentication);
+		registerAuthenticationStrategy(this, FacebookAuthentication);
 	}
 }

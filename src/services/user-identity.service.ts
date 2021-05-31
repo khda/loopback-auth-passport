@@ -1,23 +1,32 @@
 import { UserIdentityService as IUIService } from '@loopback/authentication';
-import { BindingScope, bind } from '@loopback/core';
+import { BindingScope, bind, service } from '@loopback/core';
 import { repository } from '@loopback/repository';
 import { Profile as PassportProfile } from 'passport';
 
-import { User } from '../models';
-import { UserRepository } from '../repositories';
+import { User, UserIdentity, UserIdentityRelations } from '../models';
 import { UserIdentityRepository } from '../repositories/user-identity.repository';
+
+import { CrudRepositoryService } from './crud-repository.service';
+import { UserService } from './user.service';
+
+type Id = typeof UserIdentity.prototype.id;
 
 /**
  *
  */
 @bind({ scope: BindingScope.SINGLETON, tags: ['service'] })
-export class UserIdentityService implements IUIService<PassportProfile, User> {
+export class UserIdentityService
+	extends CrudRepositoryService<UserIdentity, Id, UserIdentityRelations>
+	implements IUIService<PassportProfile, User>
+{
 	constructor(
-		@repository(UserRepository)
-		public userRepository: UserRepository,
 		@repository(UserIdentityRepository)
 		public userIdentityRepository: UserIdentityRepository,
-	) {}
+		@service(UserService)
+		private readonly userService: UserService,
+	) {
+		super(userIdentityRepository);
+	}
 
 	/**
 	 *
@@ -31,10 +40,10 @@ export class UserIdentityService implements IUIService<PassportProfile, User> {
 
 		const email = passportProfile.emails[0].value;
 
-		let user = await this.userRepository.findOne({ where: { email } });
+		let user = await this.userService.findOne({ where: { email } });
 
 		if (!user) {
-			user = await this.userRepository.create({
+			user = await this.userService.createOne({
 				name: passportProfile.name?.givenName
 					? passportProfile.name.givenName +
 					  ' ' +
@@ -80,7 +89,7 @@ export class UserIdentityService implements IUIService<PassportProfile, User> {
 			});
 		}
 
-		return this.userRepository.findById(userId, {
+		return this.userService.findById(userId, {
 			include: ['identities', 'credentials'],
 		});
 	}

@@ -1,4 +1,8 @@
-import { AuthenticationStrategy } from '@loopback/authentication';
+import {
+	AuthenticationBindings,
+	AuthenticationStrategy,
+	UserProfileFactory,
+} from '@loopback/authentication';
 import { StrategyAdapter } from '@loopback/authentication-passport';
 import { inject } from '@loopback/core';
 import { RedirectRoute, Request } from '@loopback/rest';
@@ -7,8 +11,6 @@ import { Strategy } from 'passport-google-oauth2';
 
 import { PassportBindings } from '../../keys';
 import { User } from '../../models';
-
-import { formUserProfile } from './helper';
 
 export const GOOGLE_AUTHENTICATION_STRATEGY_NAME = 'google';
 
@@ -22,11 +24,13 @@ export class GoogleAuthentication implements AuthenticationStrategy {
 	constructor(
 		@inject(PassportBindings.GOOGLE_STRATEGY)
 		private readonly strategy: Strategy,
+		@inject(AuthenticationBindings.USER_PROFILE_FACTORY)
+		userProfileFactory: UserProfileFactory<User>,
 	) {
 		this.strategyAdapter = new StrategyAdapter(
 			this.strategy,
 			this.name,
-			formUserProfile.bind(this),
+			userProfileFactory,
 		);
 	}
 
