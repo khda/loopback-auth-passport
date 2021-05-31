@@ -25,12 +25,14 @@ import {
 	FacebookStrategyProvider,
 	GoogleInterceptor,
 	GoogleStrategyProvider,
+	LocalStrategyProvider,
 	UserInterceptor,
 } from './providers';
 import { MySequence } from './sequence';
 import {
 	FacebookAuthentication,
 	GoogleAuthentication,
+	LocalAuthentication,
 	formUserProfile,
 } from './services';
 import { ILoopbackAuthPassportApplicationConfig } from './types';
@@ -100,6 +102,11 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 			UserInterceptor,
 		);
 
+		// Local
+		this.bind(PassportBindings.LOCAL_STRATEGY).toProvider(
+			LocalStrategyProvider,
+		);
+
 		// Google
 		this.bind(PassportBindings.GOOGLE_STRATEGY_OPTIONS).to(
 			options.oauth2Providers?.google ?? ({} as GoogleStrategyOptions),
@@ -137,6 +144,7 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 			),
 		);
 
+		registerAuthenticationStrategy(this, LocalAuthentication);
 		registerAuthenticationStrategy(this, GoogleAuthentication);
 		registerAuthenticationStrategy(this, FacebookAuthentication);
 	}

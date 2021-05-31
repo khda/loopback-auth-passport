@@ -17,6 +17,7 @@ import { LoginRequest, User } from '../models';
 import {
 	FACEBOOK_AUTHENTICATION_STRATEGY_NAME,
 	GOOGLE_AUTHENTICATION_STRATEGY_NAME,
+	LOCAL_AUTHENTICATION_STRATEGY_NAME,
 	UserCredentialsService,
 	UserService,
 } from '../services';
@@ -80,6 +81,7 @@ export class AuthController {
 	/**
 	 *
 	 */
+	@authenticate(LOCAL_AUTHENTICATION_STRATEGY_NAME)
 	@post('/login', {
 		responses: {
 			'200': {
@@ -89,29 +91,16 @@ export class AuthController {
 			},
 		},
 	})
-	async login(
+	login(
 		@requestBody({
 			content: {
 				'application/json': { schema: getModelSchemaRef(LoginRequest) },
 			},
 		})
 		loginRequest: LoginRequest,
-	): Promise<User> {
-		const { username, password } = loginRequest;
-
-		const userCredentials = await this.userCredentialsService.findOne({
-			where: { username },
-		});
-
-		if (!userCredentials || !userCredentials.password) {
-			throw new HttpErrors.Unauthorized('User not found!');
-		} else if (!(password === userCredentials.password)) {
-			throw new HttpErrors.Unauthorized('Invalid Credentials!');
-		}
-
-		return this.userService.findById(userCredentials.userId, {
-			include: ['identities', 'credentials'],
-		});
+		@inject(SecurityBindings.USER) user: User,
+	): User {
+		return user;
 	}
 
 	@authenticate(GOOGLE_AUTHENTICATION_STRATEGY_NAME)

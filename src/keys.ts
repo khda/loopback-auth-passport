@@ -7,6 +7,7 @@ import {
 	Strategy as GoogleStrategy,
 	StrategyOptions as GoogleStrategyOptions,
 } from 'passport-google-oauth2';
+import { Strategy as LocalStrategy } from 'passport-local';
 
 export namespace ApplicationBindings {
 	export const PROJECT_NAME = BindingKey.create<string>(
@@ -20,6 +21,11 @@ export namespace PassportBindings {
 	);
 	export const USER_INTERCEPTOR = BindingKey.create<Interceptor>(
 		'authentication.UserInterceptor',
+	);
+
+	// Local
+	export const LOCAL_STRATEGY = BindingKey.create<LocalStrategy>(
+		'authentication.localStrategy',
 	);
 
 	// Google
