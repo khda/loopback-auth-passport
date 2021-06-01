@@ -10,7 +10,9 @@ import { Strategy, StrategyOption as StrategyOptions } from 'passport-facebook';
 
 import { PassportBindings } from '../keys';
 import { UserIdentityService } from '../services';
-import { TDone } from '../types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TDone = (error: any, user?: any, options?: any) => void;
 
 @injectable.provider({ scope: BindingScope.SINGLETON })
 export class FacebookStrategyProvider implements Provider<Strategy> {

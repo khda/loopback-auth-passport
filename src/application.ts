@@ -16,7 +16,7 @@ import {
 import { ServiceMixin } from '@loopback/service-proxy';
 import passport from 'passport';
 import { StrategyOption as FacebookStrategyOptions } from 'passport-facebook';
-import { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth2';
+import { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth20';
 
 import { PROJECT_NAME_DEFAULT } from './constants';
 import { ApplicationBindings, PassportBindings } from './keys';

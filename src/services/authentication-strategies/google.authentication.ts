@@ -7,7 +7,7 @@ import { StrategyAdapter } from '@loopback/authentication-passport';
 import { inject } from '@loopback/core';
 import { RedirectRoute, Request } from '@loopback/rest';
 import { UserProfile } from '@loopback/security';
-import { Strategy } from 'passport-google-oauth2';
+import { Strategy } from 'passport-google-oauth20';
 
 import { PassportBindings } from '../../keys';
 import { User } from '../../models';

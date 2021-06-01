@@ -1,7 +1,6 @@
 import { AuthenticationBindings, authenticate } from '@loopback/authentication';
 import { inject, intercept, service } from '@loopback/core';
 import {
-	HttpErrors,
 	Response,
 	RestBindings,
 	api,

@@ -6,7 +6,7 @@ import {
 import {
 	Strategy as GoogleStrategy,
 	StrategyOptions as GoogleStrategyOptions,
-} from 'passport-google-oauth2';
+} from 'passport-google-oauth20';
 import { Strategy as LocalStrategy } from 'passport-local';
 
 export namespace ApplicationBindings {

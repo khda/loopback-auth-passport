@@ -6,11 +6,15 @@ import {
 	service,
 } from '@loopback/core';
 import { Profile as PassportProfile } from 'passport';
-import { Strategy, StrategyOptions } from 'passport-google-oauth2';
+import {
+	GoogleCallbackParameters,
+	Strategy,
+	StrategyOptions,
+	VerifyCallback,
+} from 'passport-google-oauth20';
 
 import { PassportBindings } from '../keys';
 import { UserIdentityService } from '../services';
-import { TDone } from '../types';
 
 @injectable.provider({ scope: BindingScope.SINGLETON })
 export class GoogleStrategyProvider implements Provider<Strategy> {
@@ -27,8 +31,9 @@ export class GoogleStrategyProvider implements Provider<Strategy> {
 			(
 				accessToken: string,
 				refreshToken: string,
+				params: GoogleCallbackParameters,
 				profile: PassportProfile,
-				done: TDone,
+				done: VerifyCallback,
 			) => {
 				this.userIdentityService
 					.findOrCreateUser(profile)

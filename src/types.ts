@@ -1,7 +1,7 @@
 import { ApplicationConfig } from '@loopback/core';
 import { ErrorWriterOptions, RestServerConfig } from '@loopback/rest';
 import { StrategyOption as FacebookStrategyOptions } from 'passport-facebook';
-import { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth2';
+import { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth20';
 
 export interface ILoopbackAuthPassportApplicationConfig
 	extends ApplicationConfig {
@@ -12,6 +12,3 @@ export interface ILoopbackAuthPassportApplicationConfig
 		facebook?: FacebookStrategyOptions & { scope?: string | string[] };
 	};
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type TDone = (error: any, user?: any, options?: any) => void;
