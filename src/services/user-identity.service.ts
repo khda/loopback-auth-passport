@@ -9,19 +9,24 @@ import { UserIdentityRepository } from '../repositories/user-identity.repository
 import { CrudRepositoryService } from './crud-repository.service';
 import { UserService } from './user.service';
 
-type Id = typeof UserIdentity.prototype.id;
+type TUserIdentityId = typeof UserIdentity.prototype.id;
+type TUserId = typeof User.prototype.id;
 
 /**
  *
  */
 @bind({ scope: BindingScope.SINGLETON, tags: ['service'] })
 export class UserIdentityService
-	extends CrudRepositoryService<UserIdentity, Id, UserIdentityRelations>
-	implements IUIService<PassportProfile, User>
+	extends CrudRepositoryService<
+		UserIdentity,
+		TUserIdentityId,
+		UserIdentityRelations
+	>
+	implements IUIService<PassportProfile, TUserId>
 {
 	constructor(
 		@repository(UserIdentityRepository)
-		public userIdentityRepository: UserIdentityRepository,
+		private readonly userIdentityRepository: UserIdentityRepository,
 		@service(UserService)
 		private readonly userService: UserService,
 	) {
@@ -31,7 +36,7 @@ export class UserIdentityService
 	/**
 	 *
 	 */
-	async findOrCreateUser(passportProfile: PassportProfile): Promise<User> {
+	async findOrCreateUser(passportProfile: PassportProfile): Promise<TUserId> {
 		if (!passportProfile.emails?.length) {
 			throw new Error(
 				'Email-id is required in returned profile to login!',
@@ -62,7 +67,7 @@ export class UserIdentityService
 	async linkExternalProfile(
 		userIdString: string,
 		passportProfile: PassportProfile,
-	): Promise<User> {
+	): Promise<TUserId> {
 		const userId = Number(userIdString);
 
 		const existingUserIdentity = await this.userIdentityRepository.findOne({
@@ -89,8 +94,6 @@ export class UserIdentityService
 			});
 		}
 
-		return this.userService.findById(userId, {
-			include: ['identities', 'credentials'],
-		});
+		return userId;
 	}
 }

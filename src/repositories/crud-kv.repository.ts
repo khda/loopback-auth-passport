@@ -12,7 +12,7 @@ export class CrudKvRepository<
 > extends DefaultKeyValueRepository<T> {
 	constructor(
 		entityClass: typeof Model & { prototype: T },
-		private readonly dataSource: juggler.DataSource,
+		public readonly dataSource: juggler.DataSource,
 		private readonly prefix = '',
 		private readonly postfix = '',
 	) {

@@ -10,7 +10,7 @@ import { UserProfile } from '@loopback/security';
 import { Strategy } from 'passport-facebook';
 
 import { PassportBindings } from '../../keys';
-import { User } from '../../models';
+import { AuthUser } from '../../models';
 
 export const FACEBOOK_AUTHENTICATION_STRATEGY_NAME = 'facebook';
 
@@ -19,18 +19,18 @@ export const FACEBOOK_AUTHENTICATION_STRATEGY_NAME = 'facebook';
  */
 export class FacebookAuthentication implements AuthenticationStrategy {
 	public readonly name = FACEBOOK_AUTHENTICATION_STRATEGY_NAME;
-	private readonly strategyAdapter: StrategyAdapter<User>;
+	private readonly strategyAdapter: StrategyAdapter<AuthUser>;
 
 	constructor(
 		@inject(PassportBindings.FACEBOOK_STRATEGY)
 		private readonly strategy: Strategy,
 		@inject(AuthenticationBindings.USER_PROFILE_FACTORY)
-		userProfileFactory: UserProfileFactory<User>,
+		private readonly userProfileFactory: UserProfileFactory<AuthUser>,
 	) {
 		this.strategyAdapter = new StrategyAdapter(
 			this.strategy,
 			this.name,
-			userProfileFactory,
+			this.userProfileFactory,
 		);
 	}
 

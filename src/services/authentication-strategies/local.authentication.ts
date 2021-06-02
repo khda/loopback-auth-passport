@@ -10,7 +10,7 @@ import { UserProfile } from '@loopback/security';
 import { Strategy } from 'passport-local';
 
 import { PassportBindings } from '../../keys';
-import { User } from '../../models';
+import { AuthUser } from '../../models';
 
 export const LOCAL_AUTHENTICATION_STRATEGY_NAME = 'local';
 
@@ -19,18 +19,18 @@ export const LOCAL_AUTHENTICATION_STRATEGY_NAME = 'local';
  */
 export class LocalAuthentication implements AuthenticationStrategy {
 	public readonly name = LOCAL_AUTHENTICATION_STRATEGY_NAME;
-	private readonly strategyAdapter: StrategyAdapter<User>;
+	private readonly strategyAdapter: StrategyAdapter<AuthUser>;
 
 	constructor(
 		@inject(PassportBindings.LOCAL_STRATEGY)
 		private readonly strategy: Strategy,
 		@inject(AuthenticationBindings.USER_PROFILE_FACTORY)
-		userProfileFactory: UserProfileFactory<User>,
+		private readonly userProfileFactory: UserProfileFactory<AuthUser>,
 	) {
 		this.strategyAdapter = new StrategyAdapter(
 			this.strategy,
 			this.name,
-			userProfileFactory,
+			this.userProfileFactory,
 		);
 	}
 

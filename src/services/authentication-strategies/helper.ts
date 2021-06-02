@@ -1,6 +1,6 @@
-import { Principal, securityId } from '@loopback/security';
+import { UserProfile, securityId } from '@loopback/security';
 
 import { AuthUser } from '../../models';
 
-export const formUserProfile = (authUser: AuthUser): AuthUser & Principal =>
+export const formUserProfile = (authUser: AuthUser): AuthUser & UserProfile =>
 	Object.assign(authUser, { [securityId]: String(authUser.id) });

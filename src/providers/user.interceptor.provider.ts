@@ -1,12 +1,24 @@
-import { Interceptor, InvocationContext, Next, Provider } from '@loopback/core';
+import {
+	AuthenticationBindings,
+	UserProfileFactory,
+} from '@loopback/authentication';
+import {
+	Interceptor,
+	InvocationContext,
+	Next,
+	Provider,
+	inject,
+} from '@loopback/core';
 import { RequestContext, RestBindings } from '@loopback/rest';
 import { SecurityBindings } from '@loopback/security';
 
-import { User } from '../models';
-import { formUserProfile } from '../services/authentication-strategies/helper';
+import { AuthUser } from '../models';
 
 export class UserInterceptor implements Provider<Interceptor> {
-	constructor() {}
+	constructor(
+		@inject(AuthenticationBindings.USER_PROFILE_FACTORY)
+		private readonly userProfileFactory: UserProfileFactory<AuthUser>,
+	) {}
 
 	value() {
 		return async (invocationCtx: InvocationContext, next: Next) => {
@@ -17,7 +29,11 @@ export class UserInterceptor implements Provider<Interceptor> {
 			requestContext.request.user &&
 				requestContext
 					.bind(SecurityBindings.USER)
-					.to(formUserProfile(requestContext.request.user as User));
+					.to(
+						this.userProfileFactory(
+							requestContext.request.user as AuthUser,
+						),
+					);
 
 			return next();
 		};

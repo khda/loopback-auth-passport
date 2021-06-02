@@ -30,9 +30,9 @@ export class UserRepository extends DefaultCrudRepository<
 		@inject('datasources.file')
 		public readonly dataSource: FileDataSource,
 		@repository.getter('UserIdentityRepository')
-		protected readonly userIdentityRepositoryGetter: Getter<UserIdentityRepository>,
+		private readonly userIdentityRepositoryGetter: Getter<UserIdentityRepository>,
 		@repository.getter('UserCredentialsRepository')
-		protected readonly userCredentialsRepositoryGetter: Getter<UserCredentialsRepository>,
+		private readonly userCredentialsRepositoryGetter: Getter<UserCredentialsRepository>,
 	) {
 		super(User, dataSource);
 

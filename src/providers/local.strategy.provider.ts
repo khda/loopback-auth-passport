@@ -32,12 +32,11 @@ export class LocalStrategyProvider implements Provider<Strategy> {
 							);
 						}
 
-						return this.userService.findById(
+						return this.userService.formAuthUser(
 							userCredentials.userId,
-							{ include: ['identities', 'credentials'] },
 						);
 					})
-					.then((user) => done(null, user))
+					.then((authUser) => done(null, authUser))
 					.catch((error) => done(error));
 			},
 		);

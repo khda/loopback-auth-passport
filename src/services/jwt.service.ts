@@ -7,10 +7,12 @@ import * as jwt from 'jsonwebtoken';
 
 import { SECOND } from '../constants';
 import { ApplicationBindings } from '../keys';
-import { AuthUser, Jwt } from '../models';
+import { AuthUser, Jwt, User } from '../models';
 import { RefreshTokenRepository } from '../repositories';
 
 import { UserService } from './user.service';
+
+type TUserId = typeof User.prototype.id;
 
 const INVALID_CREDENTIALS = 'Invalid Credentials!';
 const REFRESH_TOKEN_NOT_FOUND = 'Refresh token not found (has expired)!';
@@ -67,9 +69,9 @@ export class JwtService {
 	/**
 	 *
 	 */
-	public async generate(userId: number): Promise<Jwt> {
+	async generate(userId: TUserId): Promise<Jwt> {
 		try {
-			const authUser = await this.formAuthUser(userId);
+			const authUser = await this.userService.formAuthUser(userId);
 
 			const accessToken = jwt.sign(
 				authUser.toJSON(),
@@ -99,7 +101,7 @@ export class JwtService {
 	/**
 	 *
 	 */
-	public async refreshToken(refreshToken: string): Promise<Jwt> {
+	async refreshToken(refreshToken: string): Promise<Jwt> {
 		const oldAuthUser = await this.refreshTokenRepository.get(refreshToken);
 
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -108,12 +110,5 @@ export class JwtService {
 		}
 
 		return this.generate(oldAuthUser.id);
-	}
-
-	/**
-	 *
-	 */
-	private async formAuthUser(userId: number): Promise<AuthUser> {
-		return Promise.resolve(new AuthUser({ id: userId }));
 	}
 }

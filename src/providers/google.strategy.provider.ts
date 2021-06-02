@@ -14,17 +14,20 @@ import {
 } from 'passport-google-oauth20';
 
 import { PassportBindings } from '../keys';
-import { UserIdentityService } from '../services';
+import { UserIdentityService, UserService } from '../services';
 
 @injectable.provider({ scope: BindingScope.SINGLETON })
 export class GoogleStrategyProvider implements Provider<Strategy> {
 	strategy: Strategy;
 
 	constructor(
-		@inject(PassportBindings.GOOGLE_STRATEGY_OPTIONS)
-		private readonly strategyOptions: StrategyOptions,
 		@service(UserIdentityService)
 		private readonly userIdentityService: UserIdentityService,
+		@service(UserService)
+		private readonly userService: UserService,
+
+		@inject(PassportBindings.GOOGLE_STRATEGY_OPTIONS)
+		private readonly strategyOptions: StrategyOptions,
 	) {
 		this.strategy = new Strategy(
 			this.strategyOptions,
@@ -37,7 +40,8 @@ export class GoogleStrategyProvider implements Provider<Strategy> {
 			) => {
 				this.userIdentityService
 					.findOrCreateUser(profile)
-					.then((user) => done(null, user))
+					.then(this.userService.formAuthUser.bind(this.userService))
+					.then((authUser) => done(null, authUser))
 					.catch((error: Error) => done(error));
 			},
 		);

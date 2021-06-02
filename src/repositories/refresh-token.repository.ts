@@ -15,7 +15,7 @@ const POSTFIX = '';
 export class RefreshTokenRepository extends CrudKvRepository<AuthUser> {
 	constructor(
 		@inject(DataSourcesBindings.KV_REDIS)
-		dataSource: KvRedisDataSource,
+		public readonly dataSource: KvRedisDataSource,
 	) {
 		super(AuthUser, dataSource, PREFIX, POSTFIX);
 	}

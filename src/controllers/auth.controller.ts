@@ -102,9 +102,10 @@ export class AuthController {
 			},
 		})
 		loginRequest: LoginRequest,
-		@inject(SecurityBindings.USER) user: User,
+		@inject(SecurityBindings.USER)
+		authUser: AuthUser & UserProfile,
 	): Promise<Jwt> {
-		return this.jwtService.generate(user.id);
+		return this.jwtService.generate(authUser.id);
 	}
 
 	/**
@@ -151,11 +152,11 @@ export class AuthController {
 	})
 	async googleCallback(
 		@inject(SecurityBindings.USER)
-		user: UserProfile,
+		authUser: AuthUser & UserProfile,
 	): Promise<Jwt> {
-		console.log('user', user);
+		console.log('authUser', authUser);
 
-		return this.jwtService.generate(user.id);
+		return this.jwtService.generate(authUser.id);
 	}
 
 	/**
@@ -202,11 +203,11 @@ export class AuthController {
 	})
 	async facebookCallback(
 		@inject(SecurityBindings.USER)
-		user: UserProfile,
+		authUser: AuthUser & UserProfile,
 	): Promise<Jwt> {
-		console.log('user', user);
+		console.log('authUser', authUser);
 
-		return this.jwtService.generate(user.id);
+		return this.jwtService.generate(authUser.id);
 	}
 
 	/**

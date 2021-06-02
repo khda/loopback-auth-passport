@@ -9,7 +9,10 @@ export class UserIdentityRepository extends DefaultCrudRepository<
 	typeof UserIdentity.prototype.id,
 	UserIdentity
 > {
-	constructor(@inject('datasources.file') dataSource: FileDataSource) {
+	constructor(
+		@inject('datasources.file')
+		public readonly dataSource: FileDataSource,
+	) {
 		super(UserIdentity, dataSource);
 	}
 }
