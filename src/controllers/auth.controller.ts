@@ -8,13 +8,14 @@ import {
 	get,
 	getModelSchemaRef,
 	param,
+	patch,
 	post,
 	requestBody,
 } from '@loopback/rest';
 import { SecurityBindings, UserProfile } from '@loopback/security';
 
 import { PassportBindings } from '../keys';
-import { AuthUser, Jwt, LoginRequest, User } from '../models';
+import { AuthUser, Jwt, LoginRequest, User, UserCredentials } from '../models';
 import {
 	FACEBOOK_AUTHENTICATION_STRATEGY_NAME,
 	GOOGLE_AUTHENTICATION_STRATEGY_NAME,
@@ -22,6 +23,7 @@ import {
 	JwtService,
 	LOCAL_AUTHENTICATION_STRATEGY_NAME,
 	UserCredentialsService,
+	UserIdentityService,
 	UserService,
 } from '../services';
 import { BEARER_SECURITY } from '../utils';
@@ -35,6 +37,8 @@ export class AuthController {
 		private readonly jwtService: JwtService,
 		@service(UserCredentialsService)
 		private readonly userCredentialsService: UserCredentialsService,
+		@service(UserIdentityService)
+		private readonly userIdentityService: UserIdentityService,
 	) {}
 
 	/**
@@ -268,12 +272,89 @@ export class AuthController {
 			},
 		},
 	})
-	async profile(
+	async getProfile(
 		@inject(SecurityBindings.USER)
 		authUser: AuthUser & UserProfile,
 	): Promise<User> {
 		return this.userService.findById(authUser.id, {
 			include: ['identities', 'credentials'],
 		});
+	}
+
+	/**
+	 *
+	 */
+	@authenticate(JWT_AUTHENTICATION_STRATEGY_NAME)
+	@patch('/profile', {
+		security: BEARER_SECURITY,
+		responses: {
+			'200': {
+				content: {
+					'application/json': { schema: getModelSchemaRef(User) },
+				},
+			},
+		},
+	})
+	async updateProfile(
+		@inject(SecurityBindings.USER)
+		authUser: AuthUser & UserProfile,
+		@requestBody({
+			content: {
+				'application/json': {
+					schema: getModelSchemaRef(User, {
+						title: 'UserToUpdate',
+						partial: true,
+						exclude: ['id'],
+					}),
+				},
+			},
+		})
+		userToUpdate: Partial<Omit<User, 'id'>>,
+	): Promise<User> {
+		if (userToUpdate.email) {
+			await this.userIdentityService.deleteAll({ userId: authUser.id });
+		}
+
+		return this.userService.updateById(authUser.id, userToUpdate);
+	}
+
+	/**
+	 *
+	 */
+	@authenticate(JWT_AUTHENTICATION_STRATEGY_NAME)
+	@patch('/credentials', {
+		security: BEARER_SECURITY,
+		responses: {
+			'200': {
+				content: {
+					'application/json': {
+						schema: getModelSchemaRef(UserCredentials),
+					},
+				},
+			},
+		},
+	})
+	async updateCredentials(
+		@inject(SecurityBindings.USER)
+		authUser: AuthUser & UserProfile,
+		@requestBody({
+			content: {
+				'application/json': {
+					schema: getModelSchemaRef(UserCredentials, {
+						title: 'UserCredentialsToUpdate',
+						partial: true,
+						exclude: ['id', 'userId'],
+					}),
+				},
+			},
+		})
+		userCredentialsToUpdate: Partial<
+			Omit<UserCredentials, 'id' | 'userId'>
+		>,
+	): Promise<UserCredentials> {
+		return this.userCredentialsService.updateById(
+			authUser.id,
+			userCredentialsToUpdate,
+		);
 	}
 }
