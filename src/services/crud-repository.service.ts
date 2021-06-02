@@ -26,20 +26,28 @@ export class CrudRepositoryService<
 	/**
 	 *
 	 */
-	async createOne(entityRaw: DataObject<E>): Promise<E & Relations> {
+	async createOne(
+		entityRaw: DataObject<E>,
+		filter?: FilterExcludingWhere<E>,
+	): Promise<E & Relations> {
 		const entity = await this.repository.create(entityRaw);
 
-		return this.findById(entity.getId() as Id);
+		return this.findById(entity.getId() as Id, filter);
 	}
 
 	/**
 	 *
 	 */
-	async createAll(entitiesRaw: DataObject<E>[]): Promise<(E & Relations)[]> {
+	async createAll(
+		entitiesRaw: DataObject<E>[],
+		filter?: FilterExcludingWhere<E>,
+	): Promise<(E & Relations)[]> {
 		const entities = await this.repository.createAll(entitiesRaw);
 
 		return Promise.all(
-			entities.map(async (entity) => this.findById(entity.getId() as Id)),
+			entities.map(async (entity) =>
+				this.findById(entity.getId() as Id, filter),
+			),
 		);
 	}
 
@@ -77,10 +85,14 @@ export class CrudRepositoryService<
 	/**
 	 *
 	 */
-	async updateById(id: Id, entityRaw: DataObject<E>): Promise<E & Relations> {
+	async updateById(
+		id: Id,
+		entityRaw: DataObject<E>,
+		filter?: FilterExcludingWhere<E>,
+	): Promise<E & Relations> {
 		await this.repository.updateById(id, entityRaw);
 
-		return this.findById(id);
+		return this.findById(id, filter);
 	}
 
 	/**
@@ -89,10 +101,11 @@ export class CrudRepositoryService<
 	async updateAll(
 		entityRaw: DataObject<E>,
 		where?: Where<E>,
+		filter?: FilterExcludingWhere<E>,
 	): Promise<(E & Relations)[]> {
 		await this.repository.updateAll(entityRaw, where);
 
-		return this.findAll({ where });
+		return this.findAll({ ...filter, where });
 	}
 
 	/**
@@ -101,10 +114,11 @@ export class CrudRepositoryService<
 	async replaceById(
 		id: Id,
 		entityRaw: DataObject<E>,
+		filter?: FilterExcludingWhere<E>,
 	): Promise<E & Relations> {
 		await this.repository.replaceById(id, entityRaw);
 
-		return this.findById(id);
+		return this.findById(id, filter);
 	}
 
 	/**
@@ -119,8 +133,11 @@ export class CrudRepositoryService<
 	/**
 	 *
 	 */
-	async deleteById(id: Id): Promise<E & Relations> {
-		const entity = await this.findById(id);
+	async deleteById(
+		id: Id,
+		filter?: FilterExcludingWhere<E>,
+	): Promise<E & Relations> {
+		const entity = await this.findById(id, filter);
 
 		await this.repository.deleteById(id);
 
@@ -130,8 +147,11 @@ export class CrudRepositoryService<
 	/**
 	 *
 	 */
-	async deleteAll(where?: Where<E>): Promise<(E & Relations)[]> {
-		const entities = await this.findAll({ where });
+	async deleteAll(
+		where?: Where<E>,
+		filter?: FilterExcludingWhere<E>,
+	): Promise<(E & Relations)[]> {
+		const entities = await this.findAll({ ...filter, where });
 
 		await this.repository.deleteAll(where);
 
@@ -158,13 +178,16 @@ export class CrudRepositoryService<
 	/**
 	 *
 	 */
-	async upsertOne(entityRaw: Entity & DataObject<E>): Promise<E & Relations> {
+	async upsertOne(
+		entityRaw: Entity & DataObject<E>,
+		filter?: FilterExcludingWhere<E>,
+	): Promise<E & Relations> {
 		const id = entityRaw.getId() as Id;
 
 		const isExists = await this.exists(id);
 
 		return isExists
-			? this.updateById(id, entityRaw)
-			: this.createOne(entityRaw);
+			? this.updateById(id, entityRaw, filter)
+			: this.createOne(entityRaw, filter);
 	}
 }
