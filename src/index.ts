@@ -41,6 +41,32 @@ if (require.main === module) {
 				safeFields: ERROR_SAFE_FIELDS,
 			},
 		},
+		dataSource: {
+			kvRedis: {
+				name: 'KvRedis',
+				connector: 'kv-redis',
+				url: process.env.REDIS_URL,
+				host: process.env.REDIS_HOST,
+				port: process.env.REDIS_PORT
+					? Number(process.env.REDIS_PORT)
+					: undefined,
+				password: process.env.REDIS_PASSWORD,
+				db: process.env.REDIS_DATABASE,
+			},
+		},
+		jwt: {
+			accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
+			accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN
+				? Number(process.env.ACCESS_TOKEN_EXPIRES_IN)
+				: undefined,
+			accessTokenIssuer: process.env.ACCESS_TOKEN_ISSUER,
+			refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN
+				? Number(process.env.REFRESH_TOKEN_EXPIRES_IN)
+				: undefined,
+			refreshTokenSize: process.env.REFRESH_TOKEN_SIZE
+				? Number(process.env.REFRESH_TOKEN_SIZE)
+				: undefined,
+		},
 		oauth2Providers: {
 			google: {
 				clientID: process.env.GOOGLE_CLIENT_ID as string,

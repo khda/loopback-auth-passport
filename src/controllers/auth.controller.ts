@@ -1,31 +1,38 @@
 import { AuthenticationBindings, authenticate } from '@loopback/authentication';
 import { inject, intercept, service } from '@loopback/core';
 import {
+	HttpErrors,
 	Response,
 	RestBindings,
 	api,
 	get,
 	getModelSchemaRef,
+	param,
 	post,
 	requestBody,
 } from '@loopback/rest';
 import { SecurityBindings, UserProfile } from '@loopback/security';
 
 import { PassportBindings } from '../keys';
-import { LoginRequest, User } from '../models';
+import { AuthUser, Jwt, LoginRequest, User } from '../models';
 import {
 	FACEBOOK_AUTHENTICATION_STRATEGY_NAME,
 	GOOGLE_AUTHENTICATION_STRATEGY_NAME,
+	JWT_AUTHENTICATION_STRATEGY_NAME,
+	JwtService,
 	LOCAL_AUTHENTICATION_STRATEGY_NAME,
 	UserCredentialsService,
 	UserService,
 } from '../services';
+import { BEARER_SECURITY } from '../utils';
 
 @api({ basePath: '/auth' })
 export class AuthController {
 	constructor(
 		@service(UserService)
 		private readonly userService: UserService,
+		@service(JwtService)
+		private readonly jwtService: JwtService,
 		@service(UserCredentialsService)
 		private readonly userCredentialsService: UserCredentialsService,
 	) {}
@@ -37,7 +44,7 @@ export class AuthController {
 		responses: {
 			'200': {
 				content: {
-					'application/json': { schema: getModelSchemaRef(User) },
+					'application/json': { schema: getModelSchemaRef(Jwt) },
 				},
 			},
 		},
@@ -49,16 +56,16 @@ export class AuthController {
 			},
 		})
 		signupRequest: LoginRequest,
-	): Promise<User> {
+	): Promise<Jwt> {
 		const existingUserCredentials =
 			await this.userCredentialsService.findOne({
 				where: { username: signupRequest.username },
 			});
 
 		if (existingUserCredentials) {
-			return this.userService.findById(existingUserCredentials.userId, {
-				include: ['identities', 'credentials'],
-			});
+			throw new HttpErrors.BadRequest(
+				'User with the same username already exists!',
+			);
 		}
 
 		const user = await this.userService.createOne({
@@ -72,9 +79,7 @@ export class AuthController {
 			password: signupRequest.password,
 		});
 
-		return this.userService.findById(user.id, {
-			include: ['identities', 'credentials'],
-		});
+		return this.jwtService.generate(user.id);
 	}
 
 	/**
@@ -85,12 +90,12 @@ export class AuthController {
 		responses: {
 			'200': {
 				content: {
-					'application/json': { schema: getModelSchemaRef(User) },
+					'application/json': { schema: getModelSchemaRef(Jwt) },
 				},
 			},
 		},
 	})
-	login(
+	async login(
 		@requestBody({
 			content: {
 				'application/json': { schema: getModelSchemaRef(LoginRequest) },
@@ -98,15 +103,17 @@ export class AuthController {
 		})
 		loginRequest: LoginRequest,
 		@inject(SecurityBindings.USER) user: User,
-	): User {
-		return user;
+	): Promise<Jwt> {
+		return this.jwtService.generate(user.id);
 	}
 
+	/**
+	 *
+	 */
 	@authenticate(GOOGLE_AUTHENTICATION_STRATEGY_NAME)
 	@get('/google', {
 		responses: {
-			200: {
-				description: 'A successful response.',
+			'200': {
 				content: { 'application/json': { schema: { type: 'string' } } },
 			},
 		},
@@ -129,19 +136,35 @@ export class AuthController {
 		return redirectUrl;
 	}
 
+	/**
+	 *
+	 */
 	@intercept(PassportBindings.GOOGLE_CALLBACK_INTERCEPTOR)
-	@get('/google/callback')
-	googleCallback(@inject(SecurityBindings.USER) user: UserProfile) {
+	@get('/google/callback', {
+		responses: {
+			'200': {
+				content: {
+					'application/json': { schema: getModelSchemaRef(Jwt) },
+				},
+			},
+		},
+	})
+	async googleCallback(
+		@inject(SecurityBindings.USER)
+		user: UserProfile,
+	): Promise<Jwt> {
 		console.log('user', user);
 
-		return user;
+		return this.jwtService.generate(user.id);
 	}
 
+	/**
+	 *
+	 */
 	@authenticate(FACEBOOK_AUTHENTICATION_STRATEGY_NAME)
 	@get('/facebook', {
 		responses: {
-			200: {
-				description: 'A successful response.',
+			'200': {
 				content: { 'application/json': { schema: { type: 'string' } } },
 			},
 		},
@@ -164,11 +187,92 @@ export class AuthController {
 		return redirectUrl;
 	}
 
+	/**
+	 *
+	 */
 	@intercept(PassportBindings.FACEBOOK_CALLBACK_INTERCEPTOR)
-	@get('/facebook/callback')
-	facebookCallback(@inject(SecurityBindings.USER) user: UserProfile) {
+	@get('/facebook/callback', {
+		responses: {
+			'200': {
+				content: {
+					'application/json': { schema: getModelSchemaRef(Jwt) },
+				},
+			},
+		},
+	})
+	async facebookCallback(
+		@inject(SecurityBindings.USER)
+		user: UserProfile,
+	): Promise<Jwt> {
 		console.log('user', user);
 
-		return user;
+		return this.jwtService.generate(user.id);
+	}
+
+	/**
+	 *
+	 */
+	@post('/refresh-token', {
+		responses: {
+			'200': {
+				content: {
+					'application/json': { schema: { 'x-ts-type': Jwt } },
+				},
+			},
+		},
+	})
+	async refreshToken(
+		@param.query.string('refreshToken')
+		refreshToken: string,
+	): Promise<Jwt> {
+		return this.jwtService.refreshToken(refreshToken);
+	}
+
+	/**
+	 *
+	 */
+	@authenticate(JWT_AUTHENTICATION_STRATEGY_NAME)
+	@post('/logout', {
+		security: BEARER_SECURITY,
+		responses: {
+			'200': {
+				content: {
+					'application/json': { schema: { type: 'boolean' } },
+				},
+			},
+		},
+	})
+	async logout(
+		@inject(SecurityBindings.USER)
+		authUser: AuthUser & UserProfile,
+		@param.header.string('authorization')
+		authorization: string,
+	): Promise<true> {
+		const accessToken = authorization.replace(/bearer /iu, '');
+
+		return Promise.resolve(true);
+	}
+
+	/**
+	 *
+	 */
+	@authenticate(JWT_AUTHENTICATION_STRATEGY_NAME)
+	@get('/profile', {
+		security: BEARER_SECURITY,
+		responses: {
+			'200': {
+				content: {
+					'application/json': { schema: getModelSchemaRef(User) },
+				},
+			},
+		},
+	})
+	async profile(
+		@inject(SecurityBindings.USER)
+		authUser: AuthUser & UserProfile,
+	): Promise<User> {
+		return this.userService.findById(authUser.id, {
+			include: ['identities', 'credentials'],
+		});
 	}
 }

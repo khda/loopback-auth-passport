@@ -1,3 +1,5 @@
+export const SECOND = 1000;
+
 export const PROJECT_NAME_DEFAULT = 'LoopbackAuthPassport';
 export const GRACE_PERIOD_FOR_CLOSE = 5000;
 export const ERROR_SAFE_FIELDS = ['meta'];

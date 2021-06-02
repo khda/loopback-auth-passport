@@ -19,12 +19,17 @@ import { StrategyOption as FacebookStrategyOptions } from 'passport-facebook';
 import { StrategyOptions as GoogleStrategyOptions } from 'passport-google-oauth20';
 
 import { PROJECT_NAME_DEFAULT } from './constants';
-import { ApplicationBindings, PassportBindings } from './keys';
+import {
+	ApplicationBindings,
+	DataSourcesBindings,
+	PassportBindings,
+} from './keys';
 import {
 	FacebookInterceptor,
 	FacebookStrategyProvider,
 	GoogleInterceptor,
 	GoogleStrategyProvider,
+	JwtStrategyProvider,
 	LocalStrategyProvider,
 	UserInterceptor,
 } from './providers';
@@ -32,10 +37,12 @@ import { MySequence } from './sequence';
 import {
 	FacebookAuthentication,
 	GoogleAuthentication,
+	JwtAuthentication,
 	LocalAuthentication,
 	formUserProfile,
 } from './services';
 import { ILoopbackAuthPassportApplicationConfig } from './types';
+import { SECURITY_SCHEMES } from './utils';
 
 export { ApplicationConfig };
 
@@ -75,14 +82,19 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 			openapi: '3.0.0',
 			info: { title: 'Loopback Auth Passport', version: '0.0.1' },
 			paths: {},
+			components: { securitySchemes: SECURITY_SCHEMES },
 			servers: [{ url: '/' }],
 		});
 
 		this.bind(ApplicationBindings.PROJECT_NAME).to(
 			options.application?.projectName ?? PROJECT_NAME_DEFAULT,
 		);
+		this.bind(ApplicationBindings.JWT_SERVICE_OPTIONS).to(options.jwt);
 		this.bind(RestBindings.ERROR_WRITER_OPTIONS).to(
 			options.rest?.errorWriterOptions ?? {},
+		);
+		this.configure(DataSourcesBindings.KV_REDIS).to(
+			options.dataSource?.kvRedis,
 		);
 
 		// Authentication
@@ -105,6 +117,15 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 		// Local
 		this.bind(PassportBindings.LOCAL_STRATEGY).toProvider(
 			LocalStrategyProvider,
+		);
+
+		// Jwt
+		this.bind(PassportBindings.JWT_STRATEGY_OPTIONS).to({
+			secretOrKey: options.jwt?.accessTokenSecret,
+			issuer: options.jwt?.accessTokenIssuer,
+		});
+		this.bind(PassportBindings.JWT_STRATEGY).toProvider(
+			JwtStrategyProvider,
 		);
 
 		// Google
@@ -145,6 +166,7 @@ export class LoopbackAuthPassportApplication extends BootMixin(
 		);
 
 		registerAuthenticationStrategy(this, LocalAuthentication);
+		registerAuthenticationStrategy(this, JwtAuthentication);
 		registerAuthenticationStrategy(this, GoogleAuthentication);
 		registerAuthenticationStrategy(this, FacebookAuthentication);
 	}
